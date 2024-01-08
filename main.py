@@ -1,5 +1,4 @@
 import sys
-import pygame_gui
 import pygame
 from pygame.locals import *
 
@@ -11,12 +10,13 @@ clock = pygame.time.Clock()
 width, height = 640, 480
 screen = pygame.display.set_mode((width, height))
 
+lvl_image = pygame.image.load("fon_level.png")
 
 def terminate():
     pygame.quit()
     sys.exit()
 
-
+# заставка
 def draw_screensaver(screen):
     screen.fill((194, 237, 206))  # изменить цвет
     font = pygame.font.Font(None, 50)
@@ -36,19 +36,35 @@ def draw_screensaver(screen):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
-            elif event.type == pygame.KEYDOWN or \
-                    event.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.pos[0] >= 250 and event.pos[0] <= 400 and event.pos[1] >= 250 and event.pos[1] <= 300:
                     return
         pygame.display.flip()
         clock.tick(fps)
 
+# меню с выбором уровня
+def draw_menu(screen):
+    while True:
+        screen.blit(lvl_image, (0, 0))
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                terminate()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.pos[0] >= 47 and event.pos[0] <= 134 and event.pos[1] >= 155 and event.pos[1] <= 240:
+                    return # нужно написать функцию, которая создаёт 1 уровень
+
+        # Update.
+
+        # Draw.
+        pygame.display.flip()
+        clock.tick(fps)
+
 
 draw_screensaver(screen)
-
-# Game loop.
+draw_menu(screen)
+# основной цикл всей игры
 while True:
-    screen.fill((0, 0, 0))
+    screen.fill((255, 255, 255))
     for event in pygame.event.get():
         if event.type == QUIT:
             terminate()
