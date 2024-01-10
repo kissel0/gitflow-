@@ -1,5 +1,6 @@
 import sys
 import pygame
+from pygame import Surface
 from pygame.locals import *
 
 pygame.init()
@@ -11,10 +12,21 @@ width, height = 640, 480
 screen = pygame.display.set_mode((width, height))
 
 lvl_image = pygame.image.load("fon_level.png")
+level = [
+    "                                                                                                                        ",
+    "                                                                                                                        ",
+    "                                                                                                                        ",
+    "                                                                                                                        ",
+    "                                                       --------                       ----------                        ",
+    "                   ------                                                                            --------           ",
+    "    ------                          --------                         ---------                                          ",
+    "------------------------------------------------------------------------------------------------------------------------"]
+
 
 def terminate():
     pygame.quit()
     sys.exit()
+
 
 # заставка
 def draw_screensaver(screen):
@@ -42,6 +54,32 @@ def draw_screensaver(screen):
         pygame.display.flip()
         clock.tick(fps)
 
+
+def draw_level(screen):
+    width, height = 1000, 400
+    new_screen = pygame.display.set_mode((width, height))
+    screen = new_screen
+    screen.fill((102, 201, 218))  # изменить цвет
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                x = y = 0  # координаты
+                for row in level:  # вся строка
+                    for col in row:  # каждый символ
+                        if col == "-":
+                            # создаем блок, заливаем его цветом и рисеум его
+                            pf = Surface((50, 50))
+                            pf.fill(Color((173, 100, 82)))
+                            screen.blit(pf, (x, y))
+                        x += 50  # блоки платформы ставятся на ширине блоков
+                    y += 50  # то же самое и с высотой
+                    x = 0  # на каждой новой строчке начинаем с нуля
+        pygame.display.flip()
+        clock.tick(fps)
+
+
 # меню с выбором уровня
 def draw_menu(screen):
     while True:
@@ -51,7 +89,7 @@ def draw_menu(screen):
                 terminate()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.pos[0] >= 47 and event.pos[0] <= 134 and event.pos[1] >= 155 and event.pos[1] <= 240:
-                    return # нужно написать функцию, которая создаёт 1 уровень
+                    draw_level(screen)
 
         # Update.
 
@@ -68,6 +106,13 @@ while True:
     for event in pygame.event.get():
         if event.type == QUIT:
             terminate()
+
+    # Update.
+
+    # Draw.
+    pygame.display.flip()
+    clock.tick(fps)
+
 
     # Update.
 
