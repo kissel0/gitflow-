@@ -1,6 +1,6 @@
 import sys
 import pygame
-from pygame import Surface
+from pygame import Surface, sprite
 from pygame.locals import *
 
 pygame.init()
@@ -10,8 +10,13 @@ clock = pygame.time.Clock()
 
 width, height = 640, 480
 screen = pygame.display.set_mode((width, height))
-
+MOVE_SPEED = 10
+WIDTH = 22
+HEIGHT = 32
+COLOR = "#888888"
+right = False
 lvl_image = pygame.image.load("fon_level.png")
+player_image = pygame.image.load("creature.png")
 level = [
     "                                                                                                                        ",
     "                                                                                                                        ",
@@ -53,29 +58,46 @@ def draw_screensaver(screen):
                     return
         pygame.display.flip()
         clock.tick(fps)
-
-
-def draw_level(screen):
+def do_fon(screen):
     width, height = 1000, 400
     new_screen = pygame.display.set_mode((width, height))
     screen = new_screen
-    screen.fill((102, 201, 218))  # изменить цвет
+    screen.fill((102, 201, 218))
+    x = y = 0  # координаты
+    up = False
+    for row in level:  # вся строка
+        for col in row:  # каждый символ
+            if col == "-":
+                # создаем блок, заливаем его цветом и рисеум его
+                pf = Surface((50, 50))
+                pf.fill(Color((173, 100, 82)))
+                screen.blit(pf, (x, y))
+            x += 50  # блоки платформы ставятся на ширине блоков
+        y += 50  # то же самое и с высотой
+        x = 0  # на каждой новой строчке начинаем с нуля
+
+def draw_level(screen):
+    posx = 90
+    posy = 280
+    right = False
+      # изменить цвет
+    do_fon(screen)
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                x = y = 0  # координаты
-                for row in level:  # вся строка
-                    for col in row:  # каждый символ
-                        if col == "-":
-                            # создаем блок, заливаем его цветом и рисеум его
-                            pf = Surface((50, 50))
-                            pf.fill(Color((173, 100, 82)))
-                            screen.blit(pf, (x, y))
-                        x += 50  # блоки платформы ставятся на ширине блоков
-                    y += 50  # то же самое и с высотой
-                    x = 0  # на каждой новой строчке начинаем с нуля
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RIGHT:
+                    right = True
+
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_RIGHT:
+                    right = False
+        if right:
+            posx += MOVE_SPEED
+            do_fon(screen)
+        screen.blit(player_image, (posx, posy))
         pygame.display.flip()
         clock.tick(fps)
 
@@ -112,7 +134,6 @@ while True:
     # Draw.
     pygame.display.flip()
     clock.tick(fps)
-
 
     # Update.
 
