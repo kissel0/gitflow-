@@ -11,10 +11,9 @@ clock = pygame.time.Clock()
 
 width, height = 640, 480
 screen = pygame.display.set_mode((width, height))
-
+blocks = pygame.sprite.Group()
 right = False
 lvl_image = pygame.image.load("fon_level.png")
-
 PLATFORM_WIDTH = 32
 PLATFORM_HEIGHT = 32
 PLATFORM_COLOR = "#FF6262"
@@ -35,6 +34,8 @@ ANIMATION_LEFT = [('mario/l1.png'),
                   ('mario/l3.png'),
                   ('mario/l4.png'),
                   ('mario/l5.png')]
+
+monsters = pygame.sprite.Group()
 
 
 class Player(sprite.Sprite):
@@ -143,6 +144,76 @@ class Platform(sprite.Sprite):
         self.image = pygame.image.load('platform.png')
         self.rect = Rect(x, y, PLATFORM_WIDTH, PLATFORM_HEIGHT)
 
+    def teleporting(self, goX, goY):
+        self.rect.x = goX
+        self.rect.y = goY
+
+
+class Cactus(Platform):
+    def __init__(self, x, y):
+        Platform.__init__(self, x, y)
+        self.y = y
+        self.x = x
+        self.image = pygame.image.load('cactus_bricks.png')
+        self.image = pygame.transform.scale(self.image, (50, 50))
+
+    def draw(self):
+        screen.blit(self.image, (self.x, self.y))
+
+    def teleporting(self, goX, goY):
+        self.rect.x = goX
+        self.rect.y = goY
+
+
+def die(self):
+    pygame.time.wait(500)
+    draw_menu(screen)
+
+
+ANIMATION_MONSTERHORYSONTAL = [('monsters/fire1.png'),
+                               ('monsters/fire2.png')]
+
+
+class Fire(sprite.Sprite):
+    def __init__(self, x, y, left, up, maxLengthLeft, maxLengthUp):
+        sprite.Sprite.__init__(self)
+        self.image = Surface((32, 32))
+        self.image.fill(Color("#2110FF"))
+        self.rect = Rect(x, y, 32, 32)
+        self.image.set_colorkey(Color("#2110FF"))
+        self.startX = x  # начальные координаты
+        self.startY = y
+        self.maxLengthLeft = maxLengthLeft  # максимальное расстояние, которое может пройти в одну сторону
+        self.maxLengthUp = maxLengthUp  # максимальное расстояние, которое может пройти в одну сторону, вертикаль
+        self.xvel = left  # cкорость передвижения по горизонтали, 0 - стоит на месте
+        self.yvel = up  # скорость движения по вертикали, 0 - не двигается
+        boltAnim = []
+        for anim in ANIMATION_MONSTERHORYSONTAL:
+            boltAnim.append((anim, 0.3))
+        self.boltAnim = pyganim.PygAnimation(boltAnim)
+        self.boltAnim.play()
+
+    def update(self, platforms):  # по принципу героя
+
+        self.image.fill(Color("#2110FF"))
+        self.boltAnim.blit(self.image, (0, 0))
+
+        self.rect.y += self.yvel
+        self.rect.x += self.xvel
+
+        self.collide(platforms)
+
+        if (abs(self.startX - self.rect.x) > self.maxLengthLeft):
+            self.xvel = -self.xvel  # если прошли максимальное растояние, то идеи в обратную сторону
+        if (abs(self.startY - self.rect.y) > self.maxLengthUp):
+            self.yvel = -self.yvel  # если прошли максимальное растояние, то идеи в обратную сторону, вертикаль
+
+    def collide(self, platforms):
+        for p in platforms:
+            if sprite.collide_rect(self, p) and self != p:  # если с чем-то или кем-то столкнулись
+                self.xvel = - self.xvel  # то поворачиваем в обратную сторону
+                self.yvel = - self.yvel
+
 
 class Camera(object):
     def __init__(self, camera_func, width, height):
@@ -197,6 +268,7 @@ def draw_screensaver(screen):
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.pos[0] >= 250 and event.pos[0] <= 400 and event.pos[1] >= 250 and event.pos[1] <= 300:
                     return
+
         pygame.display.flip()
         clock.tick(fps)
 
@@ -208,7 +280,6 @@ def main(screen):
     bg = Surface((800, 250))  # Создание видимой поверхности
     # будем использовать как фон
     bg.fill(Color(176, 224, 230))  # Заливаем поверхность сплошным цветом
-
     hero = Player(55, 55)  # создаем героя по (x,y) координатам
     left = right = False  # по умолчанию - стоим
     up = False
@@ -218,14 +289,14 @@ def main(screen):
 
     entities.add(hero)
 
-    level = level = [
+    level = [
         "                                                                                                                        ",
         "                                                                                                                        ",
         "                                                                                                                        ",
         "                                                                                                                        ",
-        "                                                       --------                       ----------                        ",
+        "                     /                                 --------                       ----------       /                ",
         "                   ------                                                                            --------           ",
-        "    ------                          --------                         ---------                                          ",
+        "    ------ *                        --------                        *---------                                          ",
         "------------------------------------------------------------------------------------------------------------------------"]
 
     timer = pygame.time.Clock()
@@ -236,7 +307,16 @@ def main(screen):
                 pf = Platform(x, y)
                 entities.add(pf)
                 platforms.append(pf)
-
+            if col == '*':
+                ct = Cactus(x, y)
+                entities.add(ct)
+                platforms.append(ct)
+            if col == '/':
+                mn = Fire(x, y, 2, 3, 150, 15)
+                entities.add(mn)
+                platforms.append(mn)
+                monsters.add(mn)
+                monsters.update(platforms)
             x += PLATFORM_WIDTH  # блоки платформы ставятся на ширине блоков
         y += PLATFORM_HEIGHT  # то же самое и с высотой
         x = 0  # на каждой новой строчке начинаем с нуля
@@ -264,7 +344,6 @@ def main(screen):
                 right = False
             if e.type == KEYUP and e.key == K_LEFT:
                 left = False
-
         new_screen.blit(bg, (0, 0))  # Каждую итерацию необходимо всё перерисовывать
 
         camera.update(hero)  # центризируем камеру относительно персонажа
